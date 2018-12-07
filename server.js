@@ -17,6 +17,7 @@ app.get('/location', (request, response) => {
   response.send(locationData);
 })
 
+
 function searchToLatLong(query){
   const geoData = require('./data/geo.json');
   const location = new Location(geoData.results[0]);
@@ -27,6 +28,28 @@ function Location(location){
   this.formatted_query = location.formatted_address;
   this.latitude = location.geometry.location.lat;
   this.longitude = location.geometry.location.lng;
+}
+
+app.get('/weather', (request, response) => {
+  const weatherData = weatherDaily(request.query.data)
+
+  response.send(weatherData);
+})
+
+function weatherDaily(query){
+  const skyData = require('./data/darksky.json');
+  const weather = new Weather(skyData);
+  return weather;
+}
+
+function Weather(weather){
+  this.latitude = Location.latitude;
+  this.longitude = Location.longitude;
+  this.weatherByDays = weather.daily.data[0].time;
+  this.weatherType = weather.daily.data[0].summary;
+  // console.log(this.weatherByDays);
+
+
 }
 
 
