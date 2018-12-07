@@ -30,26 +30,29 @@ function Location(location){
   this.longitude = location.geometry.location.lng;
 }
 
+let weatherData = [];
 app.get('/weather', (request, response) => {
-  const weatherData = weatherDaily(request.query.data)
+  const skyCast = weatherDaily(request.query.data)
 
-  response.send(weatherData);
+  response.send(skyCast);
 })
 
 function weatherDaily(query){
+  weatherData = [];
   const skyData = require('./data/darksky.json');
-  const weather = new Weather(skyData);
-  return weather;
+  skyData.daily.data.forEach((day) => {
+    new Weather(day);
+  })
+  return weatherData;
 }
 
-function Weather(weather){
+function Weather(day){
   this.latitude = Location.latitude;
   this.longitude = Location.longitude;
-  this.weatherByDays = weather.daily.data[0].time;
-  this.weatherType = weather.daily.data[0].summary;
-  // console.log(this.weatherByDays);
 
-
+  this.time = new Date(day.time * 1000).toDateString();
+  this.forecast = day.summary;
+  weatherData.push(this);
 }
 
 
