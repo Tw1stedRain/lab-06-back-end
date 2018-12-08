@@ -5,18 +5,45 @@ const cors = require('cors');
 
 const PORT = process.env.PORT || 3000;
 
+// Env Variables
+
+require('dotenv').config();
+
+// Application 
 const app = express();
 
 app.use(cors());
 
-// get location data
+// Get API Data
 
-app.get('/location', (request, response) => {
-  const locationData = searchToLatLong(request.query.data || 'Lynnwood, WA');
+app.get('/location', getLocation);
+app.get('/weather', getWeather);
 
+// handlers
+
+function getLocation(request, response){
+  const locationData = searchToLatLong(request.query.data); // 'Lynnwood, WA'
   response.send(locationData);
-})
+}
 
+function getWeather (req, res){
+  const weatherData = searchForWeather(req.query.data)
+  res.send(weatherData);
+}
+
+// Constructors
+
+function Daily(dayForecast){
+  this.forecast = dayForecast.summary;
+  this.time = new Date(dayForecast.time * 1000).toDateString();
+}
+function Location(location){
+  this.formatted_query = location.formatted_address;
+  this.latitude = location.geometry.location.lat;
+  this.longitude = location.geometry.location.lng;
+}
+
+// Search for Resource 
 
 function searchToLatLong(query){
   const geoData = require('./data/geo.json');
@@ -24,36 +51,13 @@ function searchToLatLong(query){
   return location;
 }
 
-function Location(location){
-  this.formatted_query = location.formatted_address;
-  this.latitude = location.geometry.location.lat;
-  this.longitude = location.geometry.location.lng;
+function searchForWeather(query){
+  let weatherData = require('./data/darksky.json');
+  let dailyWeatherArray = [];
+  weatherData.daily.data.forEach(forecast => dailyWeatherArray.push(new Daily(forecast)));
+  return dailyWeatherArray;
 }
 
-let weatherData = [];
-app.get('/weather', (request, response) => {
-  const skyCast = weatherDaily(request.query.data)
-
-  response.send(skyCast);
-})
-
-function weatherDaily(query){
-  weatherData = [];
-  const skyData = require('./data/darksky.json');
-  skyData.daily.data.forEach((day) => {
-    new Weather(day);
-  })
-  return weatherData;
-}
-
-function Weather(day){
-  this.latitude = Location.latitude;
-  this.longitude = Location.longitude;
-
-  this.time = new Date(day.time * 1000).toDateString();
-  this.forecast = day.summary;
-  weatherData.push(this);
-}
 
 
 // Error messages
